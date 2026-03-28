@@ -33,5 +33,10 @@ export default defineNuxtConfig({
     // build: {
     //   sourcemap: false
     // }
+  },
+  runtimeConfig: {
+    public: {
+      apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000',
+    }
   }
 })
