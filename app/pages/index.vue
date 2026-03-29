@@ -113,16 +113,7 @@ const queryStore = useQueryStore()
 const { activeQuery } = storeToRefs(queryStore)
 
 const allNovels = ref<Array<Book>>([]);
-const displayedNovels = computed(() => {
-    if (!activeQuery.value) return allNovels.value || [];
-    const q = activeQuery.value.toLowerCase();
-    return allNovels.value?.filter(n =>
-        n.book_title?.includes(q) || // 标题包含搜索
-        n.author.author_name?.includes(q) // 作者名字包含搜索
-        // n.genre.includes(q) || // tag包含搜索
-        // n.book_desc.includes(q) // 描述包含搜索
-    );
-});
+const router = useRouter()
 
 
 const clearSearch = () => {
@@ -167,22 +158,22 @@ const downloadNovel = (novel: Book) => {
     });
 };
 const diveIntoNovel = async (bookId: string) => {
-    loading.value = true
-    const result = await $fetch('/api/uploadEpisode', { method: 'POST', body: JSON.stringify({ bookId }) })
-    if(result && result.code === 200 && result.data){
-        console.log('看看返回=========>', result)
-        // titleList.value = result.data
-    } else {
-        ElMessage({
-            message: result?.msg || '请求失败',
-            type: 'error',
-            duration: 2200,
-        });
-        // toast.add({ severity: 'info', summary: 'Info', detail: result.msg || 'request fail', life: 3000 });
-    }
-    loading.value = false
+    // loading.value = true
+    router.push(`/works/${ bookId }`)
+    // loading.value = false
 }
 
 await fetchNovelList()
+
+const displayedNovels = computed(() => {
+    if (!activeQuery.value) return allNovels.value || [];
+    const q = activeQuery.value.toLowerCase();
+    return allNovels.value?.filter(n =>
+        n.book_title?.includes(q) || // 标题包含搜索
+        n.author.author_name?.includes(q) // 作者名字包含搜索
+        // n.genre.includes(q) || // tag包含搜索
+        // n.book_desc.includes(q) // 描述包含搜索
+    );
+});
 
 </script>

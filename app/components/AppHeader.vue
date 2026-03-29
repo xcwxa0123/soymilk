@@ -48,6 +48,7 @@ const { searchQuery, activeQuery } = storeToRefs(queryStore)
 
 const searchInputEl = ref<HTMLElement | null>(null);
 const searchOpen = ref(false);
+const router = useRouter()
 
 const scrolled = ref(false);
 
@@ -55,6 +56,7 @@ const scrolled = ref(false);
 const doSearch = () => {
     if (searchQuery.value.trim()) {
         activeQuery.value = searchQuery.value.trim();
+        router.push({ path: '/' });
     }
     closeSearch();
 };

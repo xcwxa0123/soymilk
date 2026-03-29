@@ -8,8 +8,8 @@ export default defineEventHandler(async event => {
             code: 200,
             msg: 'success'
         }
-        return autoResponseBody({ ...resData })
+        return { ...resData }
     } catch (error) {
-        return autoResponseBody({ data: {}, code: 500, msg: String(error) })
+        return { data: {}, code: 500, msg: String(error) }
     }
 })
