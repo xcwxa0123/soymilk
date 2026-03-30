@@ -26,6 +26,11 @@ class KakuyomuApiClass{
         return await $fetch(`${this.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`, { method: 'GET', responseType: 'blob' })
         // return `${process.env.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`
     }
+        // 获取episode地址
+    public async getEpisodeAddr(episode_id: string): Promise<any>{
+        return await $fetch(`${this.API_BASE_URL}/implapi/episode/getAddr?episodeId=${episode_id}`, { method: 'GET' })
+        // return `${process.env.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`
+    }
     // 刷新book的episode列表，同时刷book的full_des
     public async uploadEpisode(book_id: string): Promise<any>{
         return await $fetch(`${this.API_BASE_URL}/implapi/episode/updateEpisode`, { method: 'POST', body: JSON.stringify({ bookId: book_id }) })

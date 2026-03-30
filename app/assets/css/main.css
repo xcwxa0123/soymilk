@@ -1237,6 +1237,11 @@ header {
     text-indent: 2em;
 }
 
+.preview-text span {
+    margin-bottom: 1.2em;
+    text-indent: 2em;
+}
+
 /* ── INNER CONTENT ── */
 .inner {
     max-width: 860px;
