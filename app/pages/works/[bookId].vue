@@ -1,9 +1,9 @@
 <template>
     <!-- LAYOUT ROOT -->
-    <div class="layout-root">
+    <div class="layout-root" v-loading="loading">
 
         <!-- MAIN PANEL -->
-        <div class="main-panel" :class=" { shrunk: previewChapter !== null } "  v-loading="loading">
+        <div class="main-panel" :class=" { shrunk: previewChapter !== null } ">
             <div class="inner">
 
                 <!-- BOOK HERO -->
@@ -27,7 +27,8 @@
                 <hr class="divider" />
 
                 <!-- ACTION BAR -->
-                <!-- <div class="action-bar">
+                <!-- 先做单选 -->
+                <div class="action-bar">
                     <div class="action-left">
                         <button class="select-btn" :class=" { active: selectMode } " @click=" toggleSelectMode ">
                             <span>{{ selectMode ? '✓' : '☐' }}</span>
@@ -49,13 +50,18 @@
                         <span>·</span>
                         <span>{{ bookResult.number_of_episode }} </span>
                     </div>
-                </div> -->
+                </div>
 
                 <!-- CHAPTER SECTION -->
                 <div class="chapter-section">
                     <div class="volume-block" v-for="(vol, vi) in episodeResult" :key=" vol.chapter_key ">
                         <!-- VOLUME HEADER -->
-                        <div class="volume-header" :class=" {
+                        <!-- <div class="volume-header" :class=" {
+                            open: vol.expanded && !selectMode,
+                            selected: selectMode && isVolumeSelected(vol),
+                            'sel-mode': selectMode
+                        } " @click="onVolumeClick(vol)"> -->
+                         <div class="volume-header" :class=" {
                             open: vol.expanded && !selectMode,
                             selected: selectMode && isVolumeSelected(vol),
                             'sel-mode': selectMode
@@ -64,9 +70,9 @@
                             <span class="vol-num">VOL.{{ String((vi as number) + 1).padStart(2, '0') }}</span>
                             <span class="vol-title">{{ vol.list[0].main_title }}</span>
                             <span class="vol-meta">{{ vol.list.length }} 章</span>
-                            <div class="sel-check" v-if="selectMode" :class=" { checked: isVolumeSelected(vol) } ">
+                            <!-- <div class="sel-check" v-if="selectMode" :class=" { checked: isVolumeSelected(vol) } ">
                                 <span v-if="isVolumeSelected(vol)">✓</span>
-                            </div>
+                            </div> -->
                         </div>
 
                         <!-- CHAPTERS -->
@@ -106,7 +112,6 @@
             </div>
             <div class="preview-body" v-loading="textLoading">
                 <div class="preview-text">
-                    <!-- <p v-for="(para, i) in previewChapter.content" :key=" i ">{{ para }}</p> -->
                      <span>{{ previewChapter.content }}</span>
                 </div>
             </div>
@@ -115,7 +120,7 @@
     </div>
 
     <!-- DOWNLOAD CONFIRMATION DIALOG -->
-    <!-- <transition name="overlay">
+    <transition name="overlay">
         <div class="dl-dialog-overlay" v-if="showDlDialog" @click.self="showDlDialog = false">
             <div class="dl-dialog">
                 <div class="dl-dialog-head">
@@ -133,8 +138,9 @@
                             <span class="dl-vol-count">{{ group.chapters.length }} 章</span>
                         </div>
                         <div class="dl-chaps">
-                            <span class="dl-chap-tag" v-for="chap in group.chapters" :key=" chap.id ">{{ chap.title
-                            }}</span>
+                            <span class="dl-chap-tag" v-for="chap in group.chapters" :key=" chap.episode_id ">
+                                {{ chap.sub_title }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -144,9 +150,9 @@
                 </div>
             </div>
         </div>
-    </transition> -->
+    </transition>
 </template>
-<style>
+<style scoped>
 .fade-enter-active,
 .fade-leave-active {
     transition: all 0.25s ease;
@@ -170,7 +176,11 @@ const loading = ref(false)
 const textLoading = ref(false)
 const router = useRouter()
 const route = useRoute()
-let polling: any = null
+let textPolling: any = null
+let downloadPolling: any = null
+const cEpiId = ref<string | null>(null) // 当前章节id
+// const cEpititle = ref<string | null>(null) // 当前章节标题
+// const cChapTitle = ref<string | null>(null) // 当前卷标题
 
 
 import { EditPen, Memo, Timer } from '@element-plus/icons-vue'
@@ -198,88 +208,110 @@ const getBookDetail = async (bookId: string) => {
 await getBookDetail(route.params.bookId as string)
 
 // Build grouped list for the dialog
-// const dlGroups = computed(() => {
-//     if (!episodeResult.value) return [];
-//     return episodeResult.value
-//         .map((vol, vi) => ({
-//             volId: vol.id,
-//             volNum: `VOL.${ String(vi + 1).padStart(2, '0') }`,
-//             volTitle: vol.title,
-//             chapters: vol.chapters.filter(c => selectedChapters.has(c.id)),
-//         }))
-//         .filter(g => g.chapters.length > 0);
-// });
+const dlGroups = computed(() => {
+    if (!episodeResult.value) return [];
+    return episodeResult.value
+        .map((vol: any, vi: any) => ({
+            volId: vol.chapter_key,
+            volNum: `VOL.${ String(vi + 1).padStart(2, '0') }`,
+            volTitle: vol.main_title,
+            chapters: vol.list.filter((c: any) => selectedChapters.has(c.episode_id)),
+        }))
+        .filter((g: any) => g.chapters.length > 0);
+});
 
 const toggleSelectMode = () => {
     selectMode.value = !selectMode.value;
-    if (!selectMode.value) {
-        selectedChapters.clear();
+    // if (!selectMode.value) {
+    selectedChapters.clear();
+    if(cEpiId.value){
+        selectedChapters.add(cEpiId.value)
     }
+    // }
 };
 
-const isVolumeSelected = (vol: any) => vol.chapters.every((c: any) => selectedChapters.has(c.chapter_key));
+const isVolumeSelected = (vol: any) => vol.list.every((c: any) => selectedChapters.has(c.episode_id));
 
+// 先做单选
 const onVolumeClick = (vol: any) => {
-    if (selectMode.value) {
-        const allSel = isVolumeSelected(vol);
-        vol.chapters.forEach((c: any) => {
-            if (allSel) selectedChapters.delete(c.chapter_key);
-            else selectedChapters.add(c.chapter_key);
-        });
-    } else {
+    // if (selectMode.value) {
+    //     const allSel = isVolumeSelected(vol);
+    //     vol.list.forEach((c: any) => {
+    //         if (allSel) selectedChapters.delete(c.episode_id);
+    //         else selectedChapters.add(c.episode_id);
+    //     });
+    // } else {
         vol.expanded = !vol.expanded;
-    }
+    // }
 };
 
 const getEpisodeText = async (bookId: string, episodeId: string) => {
     const result = await $fetch<{
             code: number; 
-            data: { file_content: string, file_name: string }; 
+            data: { file_content: string, file_name: string, status: string }; 
             msg: string 
     }>('/api/getEpisodeText', { method: 'POST', body: JSON.stringify({ bookId, episodeId }) })
     
-    if(result && result.code === 200 && result.data){
-        console.log('看看返回=========>', result)
-        previewChapter.value.content = result.data.file_content
-        // bookResult.value = result.data.bookResult
-        // episodeResult.value = result.data.episodeResult
-    } else {
-        ElMessage({
-            message: result?.msg || '请求失败',
-            type: 'error',
-            duration: 2200,
-        });
-        // toast.add({ severity: 'info', summary: 'Info', detail: result.msg || 'request fail', life: 3000 });
-    }
     return result
 }
 
-const getEpisodeAddr = async (episodeId: string) => {
+const getEpisodeStatus = async (episodeId: string) => {
     const result = await $fetch<{
             code: number; 
-            data: { file_addr: string, file_name: string }; 
+            data: { status: string }; 
             msg: string 
-    }>('/api/getEpisodeAddr', { method: 'POST', body: JSON.stringify({ episodeId }) })
+    }>('/api/getEpisodeStatus', { method: 'POST', body: JSON.stringify({ episodeId }) })
     
-    // if(result && result.code === 200 && result.data){
-    //     console.log('看看返回=========>', result)
-    //     return result.data.file_addr
-    //     // bookResult.value = result.data.bookResult
-    //     // episodeResult.value = result.data.episodeResult
-    // } else {
-    //     ElMessage({
-    //         message: result?.msg || '请求失败',
-    //         type: 'error',
-    //         duration: 2200,
-    //     });
-    // }
     return result
+}
+
+const getEpisodeFile = async (episodeId: string) => {
+    console.log('看看你点了啥===========>episodeId', episodeId)
+    const result: any = await fetch('/api/getEpisodeFile', {
+        method: 'POST',
+        body: JSON.stringify({ episodeId }),
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    const disposition = result.headers.get('content-disposition') || ''
+    console.log('看看下载接口的disposition是什么=========>', disposition)
+    let filename = 'default.txt'
+    const match = disposition.match(/filename\*?=(?:UTF-8'')?"?(.+?)"?$/)
+    if (match && match[1]) filename = decodeURIComponent(match[1])
+
+    // const blob = new Blob([result], {
+    //     type: 'application/octet-stream'
+    // });
+    const blob = await result.blob()
+    console.log('看看下载接口的blob是什么=========>', blob)
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    loading.value = false;
+    ElMessage({
+        message: '下载成功',
+        type: 'success',
+        duration: 2200,
+    });
 }
 
 const onChapterClick = async (vol: any, chap: any) => {
+    cEpiId.value = chap.episode_id
+    // cEpititle.value = chap.sub_title
+    // cChapTitle.value = vol.list[0].main_title
     if (selectMode.value) {
-        if (selectedChapters.has(chap.id)) selectedChapters.delete(chap.id);
-        else selectedChapters.add(chap.id);
+        if (selectedChapters.has(chap.episode_id)) {
+            selectedChapters.delete(chap.episode_id);
+        } else {
+            // selectedChapters.add(chap.episode_id);
+            // 先做单选
+            selectedChapters.clear();
+            selectedChapters.add(chap.episode_id);
+        }
     } else {
         if (previewChapter.value && previewChapter.value.episode_id === chap.episode_id) {
             closePreview();
@@ -290,11 +322,32 @@ const onChapterClick = async (vol: any, chap: any) => {
             previewChapter.value = chap;
             previewVolTitle.value = vol.list[0].main_title;
             textLoading.value = true
-            await getEpisodeText(route.params.bookId as string, chap.episode_id)
-            polling = await createPolling(() => getEpisodeAddr(chap.episode_id))
-            polling.start(0, route.params.bookId as string, chap.episode_id)
+
+            // 通讯，看结果，如果结果有值就放上去，没有值就开启轮询
+            // await getEpisodeText(route.params.bookId as string, chap.episode_id)
+            textPolling = await createPolling(async () => await getEpisodeText(route.params.bookId as string, chap.episode_id))
+            await textPolling.start(0,
+                (result: any) => {
+                    console.log('看看返回=========>', result)
+                    // 如果完成了就拉，然后终止，不然继续轮询
+                    if(result.data.status == 'done'){
+                        console.log('轮询成功，结果：', result)
+                        previewChapter.value.content = result.data.file_content
+                        textLoading.value = false
+                        textPolling.stop();
+                    }
+                }, 
+                () =>{
+                    ElMessage({
+                        message: '通讯失败',
+                        type: 'info',
+                        duration: 1000,
+                    })
+                    textPolling.stop();
+                }
+            )
             // const promise = new Promise(async res => {
-            //     const result = await polling.start()
+            //     const result = await textPolling.start()
             //     console.log('轮询结果=========>', result)
             //     res(result)
             // })
@@ -310,7 +363,7 @@ const createPolling = async (fn: Function) => {
     let timerId: any = null;
     let stopped = false;
 
-    const start = async (delay = 0, para1: any, para2: any) => {
+    const start = async (delay = 0, resolve: Function, reject: Function) => {
         stopped = false;
 
         const loop = async (cDelay: number) => {
@@ -319,26 +372,22 @@ const createPolling = async (fn: Function) => {
             console.log('开始设置计时器')
             timerId = setTimeout(async () => {
                 const result = await fn();
-                if (result && result.code === 200 && result.data.file_addr) {
-                    console.log('轮询成功，结果：', result)
-                    stop();
-                    textLoading.value = false
-                    return;
-                } else if (result?.code === 500){
-                    // 失败了，继续轮询
-                    const errMsg = result?.msg || '请求失败';
+                console.log('轮询函数返回：', result)
+                if(result && result.code === 200 && result.data){
+                    resolve(result)
+                } else {
                     ElMessage({
-                        message: `获取章节内容失败，${ errMsg }，正在重试...`,
+                        message: result?.msg || '请求失败',
                         type: 'error',
-                        duration: 1000,
+                        duration: 2200,
                     });
+                    reject()
                 }
                 await loop(Math.min(cDelay + 500, 5000));
             }, cDelay);
         };
 
-        const result = await loop(delay);
-        return result;
+        await loop(delay);
     }
 
     const stop = () => {
@@ -355,7 +404,8 @@ const createPolling = async (fn: Function) => {
 
 const closePreview = () => {
     previewChapter.value = null; 
-    polling.stop()
+    textPolling.stop()
+    cEpiId.value = null
 };
 
 const downloadSelected = () => {
@@ -363,11 +413,42 @@ const downloadSelected = () => {
     showDlDialog.value = true;
 };
 
-const confirmDownload = () => {
+const confirmDownload = async () => {
     showDlDialog.value = false;
+    if (!cEpiId.value) return;
+    loading.value = true;
     ElMessage({ message: `已将 ${ selectedChapters.size } 章加入下载队列`, type: 'success', duration: 2200 });
+    downloadPolling = await createPolling(async () => await getEpisodeStatus(cEpiId.value as string))
+    await downloadPolling.start(0,
+        async (result: any) => {
+            if(result.data.status == 'done'){
+                downloadPolling.stop();
+                // 直接下载
+                console.log('看看到这个位置参数怎么样了=======>', cEpiId.value)
+                await getEpisodeFile(cEpiId.value as string)
+            } else {
+                ElMessage({
+                    message: '章节内容正在下载中，请稍候...',
+                    type: 'info',
+                    duration: 1000,
+                })
+            }
+
+        }, 
+        () =>{
+            ElMessage({
+                message: '章节内容正在下载中，请稍候...',
+                type: 'info',
+                duration: 1000,
+            })
+        }
+    )
 };
 
-onUnmounted( () => { if(polling) polling.stop() } )
+onUnmounted( () => {
+    if(textPolling) textPolling.stop() 
+    if(downloadPolling) downloadPolling.stop() 
+    cEpiId.value = null
+} )
 
 </script>

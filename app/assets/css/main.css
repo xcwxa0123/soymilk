@@ -58,6 +58,7 @@ body::before {
 #app {
     position: relative;
     z-index: 1;
+    
 }
 
 /* ── HEADER ── */
@@ -785,7 +786,7 @@ nav {
 footer {
     background: rgba(255, 255, 250, 0.7);
     border-top: 1px solid rgba(180, 160, 120, 0.1);
-    padding: 32px 40px;
+    padding: 15px 40px;
     text-align: center;
 }
 
@@ -1085,7 +1086,7 @@ header {
     flex: 1;
     display: flex;
     overflow: hidden;
-    height: calc(100vh - 64px);
+    height: calc(100vh - 146px);
 }
 
 /* ── MAIN PANEL ── */
@@ -1239,7 +1240,8 @@ header {
 
 .preview-text span {
     margin-bottom: 1.2em;
-    text-indent: 2em;
+    /* text-indent: 2em; */
+    white-space: pre-wrap;
 }
 
 /* ── INNER CONTENT ── */

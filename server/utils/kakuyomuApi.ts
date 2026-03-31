@@ -22,13 +22,17 @@ class KakuyomuApiClass{
         return await $fetch(`${this.API_BASE_URL}/implapi/episode/text?bookId=${book_id}&episodeId=${episode_id}`, { method: 'GET' })
     }
     // 获取episode文件
-    public async getEpisodeFile(book_id: string, episode_id: string): Promise<any>{
-        return await $fetch(`${this.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`, { method: 'GET', responseType: 'blob' })
+    public async getEpisodeFile(episode_id: string): Promise<any>{
+        return await $fetch(`${this.API_BASE_URL}/implapi/episode/getFile?episodeId=${episode_id}`, {
+            method: 'GET',
+            raw: true
+            // responseType: 'blob' 
+        })
         // return `${process.env.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`
     }
         // 获取episode地址
-    public async getEpisodeAddr(episode_id: string): Promise<any>{
-        return await $fetch(`${this.API_BASE_URL}/implapi/episode/getAddr?episodeId=${episode_id}`, { method: 'GET' })
+    public async getEpisodeStatus(episode_id: string): Promise<any>{
+        return await $fetch(`${this.API_BASE_URL}/implapi/episode/getStatus?episodeId=${episode_id}`, { method: 'GET' })
         // return `${process.env.API_BASE_URL}/implapi/episode/getFile?bookId=${book_id}&episodeId=${episode_id}`
     }
     // 刷新book的episode列表，同时刷book的full_des

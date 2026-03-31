@@ -112,7 +112,7 @@ const loading = ref(false)
 const queryStore = useQueryStore()
 const { activeQuery } = storeToRefs(queryStore)
 
-const allNovels = ref<Array<Book>>([]);
+let allNovels = reactive<Array<Book>>([]);
 const router = useRouter()
 
 
@@ -129,7 +129,7 @@ const fetchNovelList = async () => {
         if(status.value === 'success'){
             if(data.value?.code === 200){
                 // console.log('请求成功，看看data', data.value)
-                allNovels.value = data.value.data
+                allNovels = data.value.data
             } else {
                 ElMessage({
                     message: data.value?.msg || 'request fail',
@@ -166,9 +166,9 @@ const diveIntoNovel = async (bookId: string) => {
 await fetchNovelList()
 
 const displayedNovels = computed(() => {
-    if (!activeQuery.value) return allNovels.value || [];
+    if (!activeQuery.value) return allNovels || [];
     const q = activeQuery.value.toLowerCase();
-    return allNovels.value?.filter(n =>
+    return allNovels?.filter(n =>
         n.book_title?.includes(q) || // 标题包含搜索
         n.author.author_name?.includes(q) // 作者名字包含搜索
         // n.genre.includes(q) || // tag包含搜索
