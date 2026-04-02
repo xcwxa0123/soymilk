@@ -1,3 +1,4 @@
+import type { Author } from "./author";
 export interface Book {
     author: Author,
     book_desc: string,

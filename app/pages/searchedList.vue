@@ -37,7 +37,7 @@
     </section>
 
     <!-- NOVEL LIST -->
-    <main class="section" v-loading="loading">
+    <main class="section" v-loading="searchLoading">
         <div class="section-header">
             <div>
                 <div class="section-label">RANKING</div>
@@ -56,9 +56,9 @@
         </div>
 
         <!-- list -->
-        <transition-group name="list-fade" tag="div" class="novel-list">
+        <transition-group name="list-fade" tag="div" class="novel-list" :key="route.fullPath">
             <div class="novel-card" v-for="(novel, index) in displayedNovels" :key=" novel.book_id "
-                :class=" { expanded: true } " @click="() => diveIntoNovel(novel.book_id)">
+                :class=" { expanded: true } " @click="() => diveIntoNovel(novel)">
                 <!-- rank -->
                 <div class="rank-col">
                     <div class="rank-num"
@@ -108,31 +108,57 @@
 <script setup lang="ts">
 import { Mug, Star, Memo, Timer } from '@element-plus/icons-vue'
 import type { Book } from '~/types/book'
-const loading = ref(false)
+const searchLoading = ref(true)
 const queryStore = useQueryStore()
-const { activeQuery, allNovels } = storeToRefs(queryStore)
+const { activeQuery } = storeToRefs(queryStore)
 
+let allNovels = reactive<Array<Book>>([]);
 const router = useRouter()
+const route = useRoute()
 
 
-const clearSearch = async () => {
+const clearSearch = () => {
     queryStore.activeQuery = '';
     queryStore.searchQuery = '';
-    await fetchNovelList()
+    router.push('/')
 };
 
 const fetchNovelList = async () => {
     console.log('进来了=======>')
-    loading.value = true
-    if(activeQuery.value) {
+    searchLoading.value = true
+    try {
+        const result = await $fetch('/api/getSearchedList', { method: 'POST', body: JSON.stringify({ searchName: route.query.q }) })
+        if(result && result.code === 200 && result.data){
+            console.log('请求成功，看看data', result.data)
+            // allNovels = result.data
+            searchLoading.value = false
+        } else {
+            ElMessage({
+                message: result?.msg || 'request fail',
+                type: 'error',
+                duration: 2200,
+            });
+        }
+    } catch (error) {
+        
+    }
+}
 
-    } else {
-        const { data, status, error } = await useFetch('/api/getTitleList', { method: 'POST' })
+const downloadNovel = (novel: Book) => {
+    ElMessage({
+        message: `《${ novel.book_title }》已加入下载队列`,
+        type: 'success',
+        duration: 2200,
+    });
+};
+const diveIntoNovel = async (bookData: any) => {
+    searchLoading.value = true
+    try {
+        const { data, status, error } = await useFetch('/api/getSearchedBook', { method: 'POST', body: { bookData } })
         if(status.value === 'success'){
-            if(data.value?.code === 200){
-                console.log('getTitleList请求成功，看看data', data.value)
-                allNovels.value = data.value.data
-                loading.value = false
+            if(data.value?.code === 200){                
+                console.log('请求成功，看看data', data.value)
+                await router.push(`/works/${ bookData.book_id }`)
             } else {
                 ElMessage({
                     message: data.value?.msg || 'request fail',
@@ -147,29 +173,19 @@ const fetchNovelList = async () => {
                 duration: 2200,
             });
         }
-
+    } catch (error) {
+        
     }
-}
-
-const downloadNovel = (novel: Book) => {
-    ElMessage({
-        message: `《${ novel.book_title }》已加入下载队列`,
-        type: 'success',
-        duration: 2200,
-    });
-};
-const diveIntoNovel = async (bookId: string) => {
-    // loading.value = true
-    router.push(`/works/${ bookId }`)
+    searchLoading.value = false
     // loading.value = false
 }
 
 await fetchNovelList()
 
 const displayedNovels = computed(() => {
-    if (!activeQuery.value) return allNovels.value || [];
+    if (!activeQuery.value) return allNovels || [];
     const q = activeQuery.value.toLowerCase();
-    return allNovels.value?.filter(n =>
+    return allNovels?.filter(n =>
         n.book_title?.includes(q) || // 标题包含搜索
         n.author.author_name?.includes(q) // 作者名字包含搜索
         // n.genre.includes(q) || // tag包含搜索

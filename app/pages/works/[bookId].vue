@@ -174,7 +174,6 @@ const previewVolTitle = ref('');
 const showDlDialog = ref(false);
 const loading = ref(false)
 const textLoading = ref(false)
-const router = useRouter()
 const route = useRoute()
 let textPolling: any = null
 let downloadPolling: any = null

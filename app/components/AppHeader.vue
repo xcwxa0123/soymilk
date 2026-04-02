@@ -44,26 +44,42 @@
 import { Search } from '@element-plus/icons-vue'
 
 const queryStore = useQueryStore()
-const { searchQuery, activeQuery } = storeToRefs(queryStore)
+const { searchQuery, activeQuery, allNovels } = storeToRefs(queryStore)
 
 const searchInputEl = ref<HTMLElement | null>(null);
 const searchOpen = ref(false);
 const router = useRouter()
 
 const scrolled = ref(false);
+// const props = defineProps({
+//     searchClick
+// })
+
 
 // const hotTags = ['玄幻', '修仙', '都市', '言情', '历史', '悬疑', '系统流'];
-const doSearch = () => {
+const doSearch = async () => {
     if (searchQuery.value.trim()) {
         activeQuery.value = searchQuery.value.trim();
-        router.push({ path: '/' });
+        
+        const result = await $fetch('/api/getSearchedList', { method: 'POST', body: JSON.stringify({ searchName: activeQuery.value }) })
+        if(result && result.code === 200 && result.data){
+            console.log('getSearchedList请求成功，看看data', result.data)
+            allNovels.value = result.data
+            closeSearch();
+        } else {
+            ElMessage({
+                message: result?.msg || 'request fail',
+                type: 'error',
+                duration: 2200,
+            });
+        }
     }
-    closeSearch();
 };
 const openSearch = async () => {
     searchOpen.value = true;
     await nextTick();
     searchInputEl.value?.focus();
+    await router.push({ path: '/' });
 };
 
 const closeSearch = () => {
