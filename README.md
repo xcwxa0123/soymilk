@@ -56,6 +56,8 @@ yarn build
 bun run build
 ```
 
+NODE_ENV=production npm run build
+
 Locally preview production build:
 
 ```bash
