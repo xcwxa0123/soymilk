@@ -26,8 +26,8 @@
                     <div class="search-input-row">
                         <span style="font-size:17px;color:var(--ink-faint)"><el-icon><Search /></el-icon></span>
                         <input ref="searchInputEl" v-model=" searchQuery " placeholder="搜索书名、作者、类型…"
-                            @keyup.enter=" doSearch " @keyup.esc=" closeSearch " />
-                        <button class="search-go" @click=" doSearch ">搜索</button>
+                            @keyup.enter=" doSearch " @keyup.esc=" closeSearch " v-loading="loading"/>
+                        <button class="search-go" @click=" doSearch " v-loading="loading">搜索</button>
                     </div>
                     <!-- 依赖tag检索，暂时不做 -->
                     <!-- <div class="search-tags">
@@ -36,7 +36,7 @@
                     </div> -->
                 </div>
             </div>
-            <div class="search-close" @click=" closeSearch ">✕</div>
+            <div class="search-close" @click=" closeSearch " v-loading="loading">✕</div>
         </div>
     </transition>
 </template>
@@ -51,6 +51,7 @@ const searchOpen = ref(false);
 const router = useRouter()
 
 const scrolled = ref(false);
+const loading = ref(false)
 // const props = defineProps({
 //     searchClick
 // })
@@ -60,12 +61,15 @@ const scrolled = ref(false);
 const doSearch = async () => {
     if (searchQuery.value.trim()) {
         activeQuery.value = searchQuery.value.trim();
+        loading.value = true;
+        await router.push({ path: '/' });
         
         const result = await $fetch('/api/getSearchedList', { method: 'POST', body: JSON.stringify({ searchName: activeQuery.value }) })
         if(result && result.code === 200 && result.data){
             console.log('getSearchedList请求成功，看看data', result.data)
             allNovels.value = result.data
             closeSearch();
+            loading.value = false;
         } else {
             ElMessage({
                 message: result?.msg || 'request fail',
@@ -79,7 +83,6 @@ const openSearch = async () => {
     searchOpen.value = true;
     await nextTick();
     searchInputEl.value?.focus();
-    await router.push({ path: '/' });
 };
 
 const closeSearch = () => {

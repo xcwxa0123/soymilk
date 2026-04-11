@@ -58,7 +58,7 @@
         <!-- list -->
         <transition-group name="list-fade" tag="div" class="novel-list">
             <div class="novel-card" v-for="(novel, index) in displayedNovels" :key=" novel.book_id "
-                :class=" { expanded: true } " @click="() => diveIntoNovel(novel.book_id)">
+                :class=" { expanded: true } " @click="() => diveIntoNovel(novel)">
                 <!-- rank -->
                 <div class="rank-col">
                     <div class="rank-num"
@@ -125,7 +125,8 @@ const fetchNovelList = async () => {
     console.log('进来了=======>')
     loading.value = true
     if(activeQuery.value) {
-
+        console.log('在这里吗？==============>')
+        loading.value = false
     } else {
         const { data, status, error } = await useFetch('/api/getTitleList', { method: 'POST' })
         if(status.value === 'success'){
@@ -158,10 +159,20 @@ const downloadNovel = (novel: Book) => {
         duration: 2200,
     });
 };
-const diveIntoNovel = async (bookId: string) => {
-    // loading.value = true
-    router.push(`/works/${ bookId }`)
-    // loading.value = false
+const diveIntoNovel = async (book: Book) => {
+    loading.value = true
+    const result = await $fetch('/api/getSearchedBook', { method: 'POST', body: JSON.stringify({ bookData: book }) })
+    if(result && result.code === 200){
+        console.log('看看result==========>', result)
+        router.push(`/works/${ book.book_id }`)
+    } else {
+        ElMessage({
+            message: result?.msg || 'request fail',
+            type: 'error',
+            duration: 2200,
+        });
+    }
+    loading.value = false
 }
 
 await fetchNovelList()
