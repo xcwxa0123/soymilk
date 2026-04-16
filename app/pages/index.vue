@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div class="section-more" @click=" clearSearch " v-if="activeQuery">← 返回榜单</div>
-            <div class="section-more" v-else>查看更多 →</div>
+            <!-- <div class="section-more" v-else>查看更多 →</div> -->
         </div>
 
         <!-- result notice -->
