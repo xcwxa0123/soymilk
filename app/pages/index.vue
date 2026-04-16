@@ -165,7 +165,7 @@ const diveIntoNovel = async (book: Book) => {
     if(result && result.code === 200){
         console.log('看看result==========>', result)
         router.push(`/works/${ book.book_id }`)
-        loading.value = false
+        // loading.value = false
     } else {
         ElMessage({
             message: result?.msg || 'request fail',
