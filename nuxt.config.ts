@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2026-03-26',
+  compatibilityDate: '2026-04-16',
   devtools: { enabled: true },
   css: [
     // '~/assets/css/font.css',
