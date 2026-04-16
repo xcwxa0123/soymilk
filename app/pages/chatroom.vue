@@ -298,7 +298,7 @@ onMounted(async () => {
         away: false
     }
     scrollToBottom();
-    ws = new WebSocket(`ws://${ SOCKET_BASE_URL }/implapi/ws`)
+    ws = new WebSocket(`${ SOCKET_BASE_URL }`)
     ws.onopen = () => {
         ws.send(JSON.stringify({ msgtype: 'join', ...me.value }))
     }

@@ -37,7 +37,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:8000',
-      socketBaseUrl: process.env.SOCKET_BASE_URL || 'localhost:8000',
+      socketBaseUrl: process.env.SOCKET_BASE_URL || 'ws://localhost:8001/chatapi/ws',
     }
   }
 })
