@@ -6,7 +6,7 @@ module.exports = {
             env: {
                 NODE_ENV: "production",
                 // APP_ENV: "prod", 
-                // NUXT_PUBLIC_API_BASE_URL: "http://drinkwater.fun"
+                NUXT_PUBLIC_SOCKET_BASE_URL: 'wss://47.250.80.151:8001/chatapi/ws'
             }
         },
         // {
