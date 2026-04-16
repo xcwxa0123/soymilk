@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "build:prod": "cross-env NODE_ENV=production nuxt build"
+    "build:prod": "cross-env NODE_ENV=production nuxt build",
+    "linuxbuild:prod": "NODE_ENV=production nuxt build"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
