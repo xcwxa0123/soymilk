@@ -28,6 +28,8 @@ export default defineNuxtConfig({
         'lodash-unified',
         '@vue/devtools-core',
         '@vue/devtools-kit',
+        '@tensorflow-models/mobilenet',
+        '@element-plus/icons-vue',
       ]
     },
     // build: {

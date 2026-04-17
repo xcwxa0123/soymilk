@@ -4,7 +4,7 @@
     <header :class=" { scrolled: scrolled } ">
         <div class="logo-area" @click="$router.push('/')">
             <div class="logo-cn"><span class="logo-dot"></span>多喝温水</div>
-            <div class="logo-en">More drink nukumizu</div>
+            <div class="logo-en">More drink hot water</div>
         </div>
         <nav>
             <!-- <div class="nav-link active">首页</div> -->
