@@ -399,10 +399,10 @@ const copyResult = () => {
 };
 
 const analyzeImg = async () => {
-    console.log('进来分析了看看mode============>', model)
+    console.log('进来分析了看看mode============>', model.value)
     console.log('进来分析了看看file============>', imgRef.value)
-    if (!model || !imgRef.value) return
-    const analyzeRes = await model.classify(imgRef.value)
+    if (!model.value || !imgRef.value) return
+    const analyzeRes = await model.value.classify(imgRef.value)
     console.log('看看analyzeRes=============>', analyzeRes)
     if (analyzeRes && analyzeRes.length) {
         analyzeRes.forEach((element: any) => {
