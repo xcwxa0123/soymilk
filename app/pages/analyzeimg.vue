@@ -72,12 +72,12 @@
             </button>
             <button
               class="analyze-btn"
-              :disabled="!imageUrl || analyzing"
+              :disabled="!imageUrl || analyzing || !model"
               @click="startAnalyze"
             >
               <div class="spin" v-if="analyzing"></div>
               <span v-else>🔍</span>
-              <span>{{ analyzing ? '分析中…' : '开始分析' }}</span>
+              <span>{{ !model ? '等待model加载' : ( analyzing ? '分析中…' : '开始分析' ) }}</span>
             </button>
           </div>
 
@@ -246,7 +246,7 @@
 import * as tf from '@tensorflow/tfjs'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import '@tensorflow/tfjs-backend-webgl'
-let model: any = null
+const model = ref(null as any)
 
 const fileInput = ref(null as any);
 const imageFile = ref(null as any);
@@ -420,8 +420,8 @@ const analyzeImg = async () => {
 // Paste from clipboard
 onMounted(async () => {
 
-    model = await mobilenet.load()
-    console.log('onMounted==>看看model=========>', model)
+    model.value = await mobilenet.load()
+    console.log('onMounted==>看看model=========>', model.value)
     await tf.setBackend('webgl')
     await tf.ready()
 
