@@ -77,7 +77,7 @@
             >
               <div class="spin" v-if="analyzing"></div>
               <span v-else>🔍</span>
-              <span>{{ !model ? '等待model加载' : ( analyzing ? '分析中…' : '开始分析' ) }}</span>
+              <span>{{ !modelStatus ? '等待model加载' : ( analyzing ? '分析中…' : '开始分析' ) }}</span>
             </button>
           </div>
 
@@ -246,8 +246,8 @@
 import * as tf from '@tensorflow/tfjs'
 import * as mobilenet from '@tensorflow-models/mobilenet'
 import '@tensorflow/tfjs-backend-webgl'
-const model = ref(null as any)
-
+let model: any = null
+const modelStatus = ref(false)
 const fileInput = ref(null as any);
 const imageFile = ref(null as any);
 const imageUrl = ref('');
@@ -399,10 +399,10 @@ const copyResult = () => {
 };
 
 const analyzeImg = async () => {
-    console.log('进来分析了看看mode============>', model.value)
+    console.log('进来分析了看看mode============>', model)
     console.log('进来分析了看看file============>', imgRef.value)
-    if (!model.value || !imgRef.value) return
-    const analyzeRes = await model.value.classify(imgRef.value)
+    if (!model || !imgRef.value) return
+    const analyzeRes = await model.classify(imgRef.value)
     console.log('看看analyzeRes=============>', analyzeRes)
     if (analyzeRes && analyzeRes.length) {
         analyzeRes.forEach((element: any) => {
@@ -420,8 +420,9 @@ const analyzeImg = async () => {
 // Paste from clipboard
 onMounted(async () => {
 
-    model.value = await mobilenet.load()
-    console.log('onMounted==>看看model=========>', model.value)
+    model = await mobilenet.load()
+    modelStatus.value = true
+    console.log('onMounted==>看看model=========>', model)
     await tf.setBackend('webgl')
     await tf.ready()
 
